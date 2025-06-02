@@ -29,7 +29,7 @@ async function fetchAndCacheData() {
     if (!json.affiliates) throw new Error("No data");
 
     const sorted = json.affiliates.sort((a, b) => parseFloat(b.wagered_amount) - parseFloat(a.wagered_amount));
-    const top10 = sorted.slice(0, 10);
+    const top10 = sorted.slice(0, 5);
     if (top10.length >= 2) [top10[0], top10[1]] = [top10[1], top10[0]];
 
     cachedData = top10.map(entry => ({
