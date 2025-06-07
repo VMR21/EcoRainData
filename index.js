@@ -1,5 +1,5 @@
-import express from "express";
-import fetch from "node-fetch";
+const express = require("express");
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,9 +9,8 @@ const SELF_URL = "https://ecoraindata.onrender.com/leaderboard/top14";
 
 let cachedData = [];
 
-// ✅ CORS headers manually
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
+  res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   next();
@@ -28,11 +27,24 @@ async function fetchAndCacheData() {
     const json = await response.json();
     if (!json.affiliates) throw new Error("No data");
 
-    const sorted = json.affiliates.sort((a, b) => parseFloat(b.wagered_amount) - parseFloat(a.wagered_amount));
-    const top10 = sorted.slice(0, 5);
-    if (top10.length >= 2) [top10[0], top10[1]] = [top10[1], top10[0]];
+    let filtered = json.affiliates.filter(entry => entry.username !== "EcoDream");
 
-    cachedData = top10.map(entry => ({
+    filtered.sort((a, b) => parseFloat(b.wagered_amount) - parseFloat(a.wagered_amount));
+
+    const topWager = parseFloat(filtered[0]?.wagered_amount || 0);
+    const ecoWager = Math.round(topWager + 1137);
+
+    const ecoEntry = {
+      username: "EcoDream",
+      wagered_amount: ecoWager.toString()
+    };
+
+    filtered.unshift(ecoEntry);
+
+    const top5 = filtered.slice(0, 5);
+    if (top5.length >= 2) [top5[0], top5[1]] = [top5[1], top5[0]];
+
+    cachedData = top5.map(entry => ({
       username: maskUsername(entry.username),
       wagered: Math.round(parseFloat(entry.wagered_amount)),
       weightedWager: Math.round(parseFloat(entry.wagered_amount))
@@ -45,7 +57,7 @@ async function fetchAndCacheData() {
 }
 
 fetchAndCacheData();
-setInterval(fetchAndCacheData, 5 * 60 * 1000); // every 5 minutes
+setInterval(fetchAndCacheData, 5 * 60 * 1000);
 
 app.get("/leaderboard/top14", (req, res) => {
   res.json(cachedData);
@@ -55,6 +67,6 @@ setInterval(() => {
   fetch(SELF_URL)
     .then(() => console.log(`[🔁] Self-pinged ${SELF_URL}`))
     .catch(err => console.error("[⚠️] Self-ping failed:", err.message));
-}, 270000); // every 4.5 mins
+}, 270000);
 
 app.listen(PORT, () => console.log(`🚀 Running on port ${PORT}`));
