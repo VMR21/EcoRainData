@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const API_URL = "https://services.rainbet.com/v1/external/affiliates?start_at=2025-06-01&end_at=2025-06-07&key=RFbd9u0KPbkp0MTcZ5Elm7kyO1CVvnH9";
+const API_KEY = "RFbd9u0KPbkp0MTcZ5Elm7kyO1CVvnH9";
 const SELF_URL = "https://ecoraindata.onrender.com/leaderboard/top14";
 
 let cachedData = [];
@@ -21,34 +21,41 @@ function maskUsername(username) {
   return username.slice(0, 2) + "***" + username.slice(-2);
 }
 
+function getDynamicApiUrl() {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const start = new Date(Date.UTC(year, month, 1));
+  const end = new Date(Date.UTC(year, month + 1, 0));
+  const startStr = start.toISOString().slice(0, 10);
+  const endStr = end.toISOString().slice(0, 10);
+
+  return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
+}
+
 async function fetchAndCacheData() {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(getDynamicApiUrl());
     const json = await response.json();
     if (!json.affiliates) throw new Error("No data");
 
-    let filtered = json.affiliates.filter(entry => entry.username !== "EcoDream");
+    const sorted = json.affiliates
+      .filter(a => a.username.toLowerCase() !== "vampirenoob")
+      .sort((a, b) => parseFloat(b.wagered_amount) - parseFloat(a.wagered_amount))
+      .slice(0, 10);
 
-    filtered.sort((a, b) => parseFloat(b.wagered_amount) - parseFloat(a.wagered_amount));
-
-    const topWager = parseFloat(filtered[0]?.wagered_amount || 0);
-    const ecoWager = Math.round(topWager + 1137);
-
-    const ecoEntry = {
-      username: "EcoDream",
-      wagered_amount: ecoWager.toString()
-    };
-
-    filtered.unshift(ecoEntry);
-
-    const top5 = filtered.slice(0, 5);
-    if (top5.length >= 2) [top5[0], top5[1]] = [top5[1], top5[0]];
-
-    cachedData = top5.map(entry => ({
+    const mapped = sorted.map(entry => ({
       username: maskUsername(entry.username),
       wagered: Math.round(parseFloat(entry.wagered_amount)),
-      weightedWager: Math.round(parseFloat(entry.wagered_amount))
+      weightedWager: Math.round(parseFloat(entry.wagered_amount)),
     }));
+
+    // Swap 1st and 2nd
+    if (mapped.length >= 2) {
+      [mapped[0], mapped[1]] = [mapped[1], mapped[0]];
+    }
+
+    cachedData = mapped;
 
     console.log(`[✅] Leaderboard updated`);
   } catch (err) {
@@ -66,7 +73,7 @@ app.get("/leaderboard/top14", (req, res) => {
 setInterval(() => {
   fetch(SELF_URL)
     .then(() => console.log(`[🔁] Self-pinged ${SELF_URL}`))
-    .catch(err => console.error("[⚠️] Self-ping failed:", err.message));
+    .catch((err) => console.error("[⚠️] Self-ping failed:", err.message));
 }, 270000);
 
 app.listen(PORT, () => console.log(`🚀 Running on port ${PORT}`));
