@@ -21,15 +21,23 @@ function maskUsername(username) {
   return username.slice(0, 2) + "***" + username.slice(-2);
 }
 
-function getDynamicApiUrl() {
+function getWeeklyDateRange() {
+  const base = new Date(Date.UTC(2025, 6, 1, 0, 0, 0)); // July 1, 2025 (UTC)
   const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth();
-  const start = new Date(Date.UTC(year, month, 1));
-  const end = new Date(Date.UTC(year, month + 1, 0));
-  const startStr = start.toISOString().slice(0, 10);
-  const endStr = end.toISOString().slice(0, 10);
+  const msInWeek = 7 * 24 * 60 * 60 * 1000;
 
+  const weeksPassed = Math.floor((now.getTime() - base.getTime()) / msInWeek);
+  const weekStart = new Date(base.getTime() + weeksPassed * msInWeek);
+  const weekEnd = new Date(weekStart.getTime() + msInWeek - 1000); // 1 sec before next week
+
+  const startStr = weekStart.toISOString().slice(0, 10);
+  const endStr = weekEnd.toISOString().slice(0, 10);
+
+  return { startStr, endStr };
+}
+
+function getDynamicApiUrl() {
+  const { startStr, endStr } = getWeeklyDateRange();
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
 
@@ -56,7 +64,6 @@ async function fetchAndCacheData() {
     }
 
     cachedData = mapped;
-
     console.log(`[✅] Leaderboard updated`);
   } catch (err) {
     console.error("[❌] Failed to fetch Rainbet data:", err.message);
