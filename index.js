@@ -28,7 +28,7 @@ function getWeeklyDateRange() {
 
   const weeksPassed = Math.floor((now.getTime() - base.getTime()) / msInWeek);
   const weekStart = new Date(base.getTime() + weeksPassed * msInWeek);
-  const weekEnd = new Date(weekStart.getTime() + msInWeek - 1000); // 1 sec before next week
+  const weekEnd = new Date(weekStart.getTime() + msInWeek - 1000);
 
   const startStr = weekStart.toISOString().slice(0, 10);
   const endStr = weekEnd.toISOString().slice(0, 10);
@@ -41,29 +41,48 @@ function getDynamicApiUrl() {
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
 
+// Manual entries
+const manualData = {
+  EcoDream: 4689.64,
+  Shikaru: 2352.11,
+};
+
 async function fetchAndCacheData() {
   try {
     const response = await fetch(getDynamicApiUrl());
     const json = await response.json();
     if (!json.affiliates) throw new Error("No data");
 
-    const sorted = json.affiliates
+    const combinedMap = new Map();
+
+    // Add API data
+    json.affiliates
       .filter(a => a.username.toLowerCase() !== "vampirenoob")
-      .sort((a, b) => parseFloat(b.wagered_amount) - parseFloat(a.wagered_amount))
-      .slice(0, 10);
+      .forEach(entry => {
+        combinedMap.set(entry.username, parseFloat(entry.wagered_amount));
+      });
 
-    const mapped = sorted.map(entry => ({
-      username: maskUsername(entry.username),
-      wagered: Math.round(parseFloat(entry.wagered_amount)),
-      weightedWager: Math.round(parseFloat(entry.wagered_amount)),
-    }));
-
-    // Swap 1st and 2nd
-    if (mapped.length >= 2) {
-      [mapped[0], mapped[1]] = [mapped[1], mapped[0]];
+    // Inject/Override with manual data
+    for (const [name, amount] of Object.entries(manualData)) {
+      combinedMap.set(name, amount);
     }
 
-    cachedData = mapped;
+    // Convert to array, sort, mask and format
+    let combinedSorted = Array.from(combinedMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([username, wagered]) => ({
+        username: maskUsername(username),
+        wagered: Math.round(wagered),
+        weightedWager: Math.round(wagered),
+      }));
+
+    // Swap 1st and 2nd
+    if (combinedSorted.length >= 2) {
+      [combinedSorted[0], combinedSorted[1]] = [combinedSorted[1], combinedSorted[0]];
+    }
+
+    cachedData = combinedSorted;
     console.log(`[✅] Leaderboard updated`);
   } catch (err) {
     console.error("[❌] Failed to fetch Rainbet data:", err.message);
