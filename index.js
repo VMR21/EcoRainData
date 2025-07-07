@@ -43,8 +43,8 @@ function getDynamicApiUrl() {
 
 // Manual entries
 const manualData = {
-  EcoDream: 8843.64,
-  Shikaru: 9542.11,
+  EcoDream: 10926.64,
+  Shikaru: 10248.11,
 };
 
 async function fetchAndCacheData() {
