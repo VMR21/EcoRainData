@@ -21,23 +21,19 @@ function maskUsername(username) {
   return username.slice(0, 2) + "***" + username.slice(-2);
 }
 
-function getWeeklyDateRange() {
-  const base = new Date(Date.UTC(2025, 6, 1, 0, 0, 0)); // July 1, 2025 (UTC)
-  const now = new Date();
-  const msInWeek = 7 * 24 * 60 * 60 * 1000;
+// 🎯 Fixed date range: July 10 (00:00:01) – July 23 (23:59:59) UTC
+function getFixedDateRange() {
+  const start = new Date(Date.UTC(2025, 6, 10, 0, 0, 1)); // July 10, 2025 00:00:01 UTC
+  const end = new Date(Date.UTC(2025, 6, 23, 23, 59, 59)); // July 23, 2025 23:59:59 UTC
 
-  const weeksPassed = Math.floor((now.getTime() - base.getTime()) / msInWeek);
-  const weekStart = new Date(base.getTime() + weeksPassed * msInWeek);
-  const weekEnd = new Date(weekStart.getTime() + msInWeek - 1000);
-
-  const startStr = weekStart.toISOString().slice(0, 10);
-  const endStr = weekEnd.toISOString().slice(0, 10);
+  const startStr = start.toISOString().slice(0, 10);
+  const endStr = end.toISOString().slice(0, 10);
 
   return { startStr, endStr };
 }
 
 function getDynamicApiUrl() {
-  const { startStr, endStr } = getWeeklyDateRange();
+  const { startStr, endStr } = getFixedDateRange();
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
 
