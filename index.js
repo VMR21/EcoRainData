@@ -79,20 +79,16 @@ async function fetchClashData() {
     if (!res.ok) throw new Error(`Clash API error: ${res.status}`);
 
     const data = await res.json();
-    console.log("[Clash] Raw data:", data);
-
     const raw = Array.isArray(data) ? data : (data.referralSummaries || []);
-    console.log("[Clash] Raw entries count:", raw.length);
 
     const top = raw
       .map(entry => {
-        const masked = maskUsername(entry.name?.trim());
-        const wagered = Math.floor((entry.wagered ?? 0) / 100);
-        return {
-          username: masked,
-          wagered,
-          weightedWager: wagered,
-        };
+        const name = entry.name?.trim() || "Unknown";
+        const masked = maskUsername(name);
+        const wagered = Math.floor((entry.wagered || 0) / 1000);       // gem cents to gems
+        const weightedWager = Math.floor((entry.wagered || 0) / 100);  // gem cents to tenths
+
+        return { username: masked, wagered, weightedWager };
       })
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 10);
@@ -105,6 +101,7 @@ async function fetchClashData() {
     console.error("[❌] Clash fetch error:", err.message);
   }
 }
+
 
 
 // 🔁 Main updater
