@@ -30,7 +30,7 @@ function maskUsername(username) {
 
 // 🎯 Fixed range: July 11 – July 24 (inclusive)
 function getFixedDateRange() {
-  const start = new Date(Date.UTC(2025, 6, 11, 0, 0, 1)); // July 11
+  const start = new Date(Date.UTC(2025, 6, 10, 0, 0, 1)); // July 11
   const end = new Date(Date.UTC(2025, 6, 24, 23, 59, 59)); // July 24
   return {
     startStr: start.toISOString().slice(0, 10),
