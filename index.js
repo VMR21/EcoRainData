@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 
 // 🧾 Keys & URLs
 const API_KEY = "RFbd9u0KPbkp0MTcZ5Elm7kyO1CVvnH9";
-const CLASH_API = "https://api.clash.gg/affiliates/detailed-summary/v2/2025-07-11";
+const CLASH_API = "https://api.clash.gg/affiliates/detailed-summary/v2/2025-07-10";
 const CLASH_AUTH = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzcyIsInNjb3BlIjoiYWZmaWxpYXRlcyIsInVzZXJJZCI6NTk5OTg5OCwiaWF0IjoxNzUyMTQxMTU1LCJleHAiOjE5MDk5MjkxNTV9.OOp2OWP3Rb9iTiuZt1O0CFXIgfeTywu9A2gwyM73fHc";
 
 const SELF_URL = "https://ecoraindata.onrender.com/leaderboard/top14";
