@@ -73,39 +73,39 @@ async function fetchRainbetData() {
 async function fetchClashData() {
   try {
     const res = await fetch(CLASH_API, {
-      headers: {
-        Authorization: CLASH_AUTH,
-      },
+      headers: { Authorization: CLASH_AUTH },
     });
-
-    if (!res.ok) throw new Error("Clash API error");
+    console.log("[Clash] Response status:", res.status);
+    if (!res.ok) throw new Error(`Clash API error: ${res.status}`);
 
     const data = await res.json();
-    const raw = data?.referralSummaries || data || [];
+    console.log("[Clash] Raw data:", data);
+
+    const raw = Array.isArray(data) ? data : (data.referralSummaries || []);
+    console.log("[Clash] Raw entries count:", raw.length);
 
     const top = raw
       .map(entry => {
         const masked = maskUsername(entry.name?.trim());
-        const wagered = Math.floor(entry.wagered / 100); // cents to gems
+        const wagered = Math.floor((entry.wagered ?? 0) / 100);
         return {
           username: masked,
           wagered,
           weightedWager: wagered,
         };
       })
-      .filter(e => e.wagered > 0)
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 10);
 
-    // swap 1st and 2nd
     if (top.length >= 2) [top[0], top[1]] = [top[1], top[0]];
 
     clashData = top;
-    console.log("[✅] Clash data updated");
+    console.log("[✅] Clash data updated:", top);
   } catch (err) {
-    console.error("[❌] Failed to fetch Clash:", err.message);
+    console.error("[❌] Clash fetch error:", err.message);
   }
 }
+
 
 // 🔁 Main updater
 async function updateAllData() {
