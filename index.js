@@ -21,7 +21,7 @@ function maskUsername(username) {
   return username.slice(0, 2) + "***" + username.slice(-2);
 }
 
-// 🎯 Fixed date range: July 10 (00:00:01) – July 23 (23:59:59) UTC
+// 🎯 Fixed range: July 10 – July 23 (2025)
 function getFixedDateRange() {
   const start = new Date(Date.UTC(2025, 6, 10, 0, 0, 1)); // July 10, 2025 00:00:01 UTC
   const end = new Date(Date.UTC(2025, 6, 23, 23, 59, 59)); // July 23, 2025 23:59:59 UTC
@@ -37,12 +37,6 @@ function getDynamicApiUrl() {
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
 
-// Manual entries
-const manualData = {
-  EcoDream: 63.64,
-  Shikaru: 142.11,
-};
-
 async function fetchAndCacheData() {
   try {
     const response = await fetch(getDynamicApiUrl());
@@ -57,11 +51,6 @@ async function fetchAndCacheData() {
       .forEach(entry => {
         combinedMap.set(entry.username, parseFloat(entry.wagered_amount));
       });
-
-    // Inject/Override with manual data
-    for (const [name, amount] of Object.entries(manualData)) {
-      combinedMap.set(name, amount);
-    }
 
     // Convert to array, sort, mask and format
     let combinedSorted = Array.from(combinedMap.entries())
