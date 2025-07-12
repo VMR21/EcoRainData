@@ -29,19 +29,29 @@ function maskUsername(username) {
 }
 
 // 🎯 Fixed range: July 11 – July 24 (inclusive)
-function getFixedDateRange() {
-  const start = new Date(Date.UTC(2025, 6, 10, 0, 0, 1)); // July 11
-  const end = new Date(Date.UTC(2025, 6, 24, 23, 59, 59)); // July 24
+function get2DayDateRange() {
+  const now = new Date();
+  const base = new Date(Date.UTC(2025, 6, 11, 0, 0, 0)); // July 11, 2025 start date
+  const msIn2Days = 2 * 24 * 60 * 60 * 1000;
+
+  const diff = now.getTime() - base.getTime();
+  const periodIndex = Math.floor(diff / msIn2Days);
+
+  const start = new Date(base.getTime() + periodIndex * msIn2Days);
+  const end = new Date(start.getTime() + msIn2Days - 1000); // End just before next starts
+
   return {
     startStr: start.toISOString().slice(0, 10),
     endStr: end.toISOString().slice(0, 10),
   };
 }
 
+
 function getRainApiUrl() {
-  const { startStr, endStr } = getFixedDateRange();
+  const { startStr, endStr } = get2DayDateRange();
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
+
 
 // 🚰 Rainbet
 async function fetchRainbetData() {
