@@ -27,8 +27,8 @@ function maskUsername(username) {
 
 // 🔗 API URL (fixed July 11 – 24 range)
 function getRainApiUrl() {
-  const startStr = "2025-07-11";
-  const endStr = "2025-07-24";
+  const startStr = "2025-07-13";
+  const endStr = "2025-07-26";
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
 
