@@ -39,7 +39,10 @@ async function fetchRainbetData() {
     const json = await res.json();
 
     const top = (json.affiliates || [])
-      .filter(a => a.username.toLowerCase() !== "vampirenoob")
+      .filter(a => {
+        const name = a.username.toLowerCase();
+        return name !== "vampirenoob" && name !== "ecovolve";
+      })
       .map(a => ({
         username: maskUsername(a.username),
         wagered: Math.round(parseFloat(a.wagered_amount)),
