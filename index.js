@@ -27,10 +27,21 @@ function maskUsername(username) {
 
 // 🔗 API URL (fixed July 11 – 24 range)
 function getRainApiUrl() {
-  const startStr = "2025-07-13";
-  const endStr = "2025-07-26";
+  const now = new Date();
+  const july19 = new Date(Date.UTC(2025, 6, 19));
+  let startStr, endStr;
+
+  if (now < july19) {
+    startStr = "2025-07-13";
+    endStr = "2025-07-18";
+  } else {
+    startStr = "2025-07-19";
+    endStr = "2025-07-26";
+  }
+
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
+
 
 // 🌧️ Fetch Rainbet leaderboard
 async function fetchRainbetData() {
