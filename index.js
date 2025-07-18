@@ -43,13 +43,16 @@ function getRainApiUrl() {
 }
 
 
-// 🌧️ Fetch Rainbet leaderboard
 async function fetchRainbetData() {
   try {
     const res = await fetch(getRainApiUrl());
     const json = await res.json();
 
-    const top = (json.affiliates || [])
+    const now = new Date();
+    const start = new Date(Date.UTC(2025, 6, 18, 11, 0, 0));      // July 18, 11:00 UTC
+    const end = new Date(Date.UTC(2025, 6, 18, 23, 59, 59));      // July 18, 23:59:59 UTC
+
+    let entries = (json.affiliates || [])
       .filter(a => {
         const name = a.username.toLowerCase();
         return name !== "vampirenoob" && name !== "ecovolve";
@@ -57,12 +60,27 @@ async function fetchRainbetData() {
       .map(a => ({
         username: maskUsername(a.username),
         wagered: Math.round(parseFloat(a.wagered_amount)),
-        weightedWager: Math.round(parseFloat(a.wagered_amount)),
-      }))
+        weightedWager: Math.round(parseFloat(a.wagered_amount))
+      }));
+
+    // Dynamically add EcoVolve if within the specified time window
+    if (now >= start && now <= end) {
+      const progress = (now - start) / (end - start);
+      const ecoWager = Math.floor(42993 * progress);
+
+      entries.push({
+        username: maskUsername("EcoVolve"),
+        wagered: ecoWager,
+        weightedWager: ecoWager
+      });
+    }
+
+    // Sort and select top 10
+    const top = entries
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 10);
 
-    // Swap 1st and 2nd
+    // Swap top 2
     if (top.length >= 2) [top[0], top[1]] = [top[1], top[0]];
 
     rainData = top;
@@ -71,6 +89,8 @@ async function fetchRainbetData() {
     console.error("[❌] Failed to fetch Rainbet:", err.message);
   }
 }
+
+
 
 // 🔁 Update loop
 async function updateAllData() {
