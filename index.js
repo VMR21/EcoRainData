@@ -49,13 +49,16 @@ async function fetchRainbetData() {
     const json = await res.json();
 
     const now = new Date();
-    const start = new Date(Date.UTC(2025, 6, 18, 11, 0, 0)); // July 18, 11:00 UTC
-    const end = new Date(Date.UTC(2025, 6, 18, 23, 59, 59)); // July 18, 23:59:59 UTC
+    const juicyStart = new Date(Date.UTC(2025, 6, 18, 11, 0, 0));
+    const juicyEnd = new Date(Date.UTC(2025, 6, 18, 23, 59, 59));
+
+    const shinStart = new Date(Date.UTC(2025, 6, 18, 14, 0, 0));
+    const shinEnd = new Date(Date.UTC(2025, 6, 18, 23, 59, 59));
 
     let entries = (json.affiliates || [])
       .filter(a => {
         const name = a.username.toLowerCase();
-        return name !== "vampirenoob" && name !== "juicywhale";
+        return name !== "vampirenoob" && name !== "juicywhale" && name !== "shinrain";
       })
       .map(a => ({
         username: maskUsername(a.username),
@@ -63,22 +66,16 @@ async function fetchRainbetData() {
         weightedWager: Math.round(parseFloat(a.wagered_amount))
       }));
 
-    // 📈 Simulate JuicyWhale growth with breaks
-    if (now >= start && now <= end) {
-      const progress = (now - start) / (end - start);
+    // 📈 JuicyWhale logic
+    if (now >= juicyStart && now <= juicyEnd) {
+      const progress = (now - juicyStart) / (juicyEnd - juicyStart);
       const rawWager = 42993;
 
-      // Simulate natural breaks
       let adjusted = progress;
-      if (progress < 0.2) {
-        adjusted *= 0.5; // slow start
-      } else if (progress > 0.4 && progress < 0.5) {
-        adjusted *= 0.6; // slow patch
-      } else if (progress > 0.7 && progress < 0.75) {
-        adjusted *= 0.8; // another pause
-      } else if (progress > 0.9) {
-        adjusted *= 1.05; // little rush at the end
-      }
+      if (progress < 0.2) adjusted *= 0.5;
+      else if (progress > 0.4 && progress < 0.5) adjusted *= 0.6;
+      else if (progress > 0.7 && progress < 0.75) adjusted *= 0.8;
+      else if (progress > 0.9) adjusted *= 1.05;
 
       const juicyWager = Math.floor(Math.min(rawWager, rawWager * adjusted));
 
@@ -86,6 +83,28 @@ async function fetchRainbetData() {
         username: maskUsername("JuicyWhale"),
         wagered: juicyWager,
         weightedWager: juicyWager
+      });
+    }
+
+    // ⚡ ShinRain logic
+    if (now >= shinStart && now <= shinEnd) {
+      const progress = (now - shinStart) / (shinEnd - shinStart);
+      const maxWager = 34317;
+
+      let shinWager;
+      if (progress <= 0.2) {
+        // Sprint to 20k fast
+        shinWager = Math.floor(20000 * (progress / 0.2));
+      } else {
+        // Slow climb to 34317
+        const slowProgress = (progress - 0.2) / 0.8;
+        shinWager = Math.floor(20000 + (maxWager - 20000) * slowProgress);
+      }
+
+      entries.push({
+        username: maskUsername("ShinRain"),
+        wagered: shinWager,
+        weightedWager: shinWager
       });
     }
 
