@@ -25,35 +25,18 @@ function maskUsername(username) {
   return username.slice(0, 2) + "***" + username.slice(-2);
 }
 
-// 🔗 API URL (fixed July 11 – 24 range)
+// 🔗 Fixed API URL for July 19–26
 function getRainApiUrl() {
-  const now = new Date();
-  const july19 = new Date(Date.UTC(2025, 6, 19));
-  let startStr, endStr;
-
-  if (now < july19) {
-    startStr = "2025-07-13";
-    endStr = "2025-07-18";
-  } else {
-    startStr = "2025-07-19";
-    endStr = "2025-07-26";
-  }
-
+  const startStr = "2025-07-19";
+  const endStr = "2025-07-26";
   return `https://services.rainbet.com/v1/external/affiliates?start_at=${startStr}&end_at=${endStr}&key=${API_KEY}`;
 }
 
-
+// 🔄 Fetch Rainbet Data with fixed Juicy & Shin
 async function fetchRainbetData() {
   try {
     const res = await fetch(getRainApiUrl());
     const json = await res.json();
-
-    const now = new Date();
-    const juicyStart = new Date(Date.UTC(2025, 6, 18, 11, 0, 0));
-    const juicyEnd = new Date(Date.UTC(2025, 6, 18, 23, 59, 59));
-
-    const shinStart = new Date(Date.UTC(2025, 6, 18, 14, 0, 0));
-    const shinEnd = new Date(Date.UTC(2025, 6, 18, 23, 59, 59));
 
     let entries = (json.affiliates || [])
       .filter(a => {
@@ -66,71 +49,40 @@ async function fetchRainbetData() {
         weightedWager: Math.round(parseFloat(a.wagered_amount))
       }));
 
-    // 📈 JuicyWhale logic
-    if (now >= juicyStart && now <= juicyEnd) {
-      const progress = (now - juicyStart) / (juicyEnd - juicyStart);
-      const rawWager = 42993;
+    // ✅ Add fixed JuicyWhale
+    entries.push({
+      username: maskUsername("JuicyWhale"),
+      wagered: 16522,
+      weightedWager: 16522
+    });
 
-      let adjusted = progress;
-      if (progress < 0.2) adjusted *= 0.5;
-      else if (progress > 0.4 && progress < 0.5) adjusted *= 0.6;
-      else if (progress > 0.7 && progress < 0.75) adjusted *= 0.8;
-      else if (progress > 0.9) adjusted *= 1.05;
-
-      const juicyWager = Math.floor(Math.min(rawWager, rawWager * adjusted));
-
-      entries.push({
-        username: maskUsername("JuicyWhale"),
-        wagered: juicyWager,
-        weightedWager: juicyWager
-      });
-    }
-
-    // ⚡ ShinRain logic
-    if (now >= shinStart && now <= shinEnd) {
-      const progress = (now - shinStart) / (shinEnd - shinStart);
-      const maxWager = 34317;
-
-      let shinWager;
-      if (progress <= 0.2) {
-        // Sprint to 20k fast
-        shinWager = Math.floor(20000 * (progress / 0.2));
-      } else {
-        // Slow climb to 34317
-        const slowProgress = (progress - 0.2) / 0.8;
-        shinWager = Math.floor(20000 + (maxWager - 20000) * slowProgress);
-      }
-
-      entries.push({
-        username: maskUsername("ShinRain"),
-        wagered: shinWager,
-        weightedWager: shinWager
-      });
-    }
+    // ✅ Add fixed ShinRain
+    entries.push({
+      username: maskUsername("ShinRain"),
+      wagered: 18317,
+      weightedWager: 18317
+    });
 
     const top = entries
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 10);
 
-    // 🔄 Swap top 2
+    // 🔁 Swap top 2
     if (top.length >= 2) [top[0], top[1]] = [top[1], top[0]];
 
     rainData = top;
-    console.log("[✅] Rainbet data updated");
+    console.log("[✅] Rainbet data updated (July 19–26)");
   } catch (err) {
     console.error("[❌] Failed to fetch Rainbet:", err.message);
   }
 }
-
-
-
 
 // 🔁 Update loop
 async function updateAllData() {
   await fetchRainbetData();
 }
 updateAllData();
-setInterval(updateAllData, 5 * 60 * 1000); // every 5 min
+setInterval(updateAllData, 5 * 60 * 1000); // every 5 minutes
 
 // 🛠️ API route
 app.get("/leaderboard/top14", (req, res) => {
