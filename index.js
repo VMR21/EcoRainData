@@ -52,15 +52,15 @@ async function fetchRainbetData() {
     // ✅ Add fixed JuicyWhale
     entries.push({
       username: maskUsername("JuicyWhale"),
-      wagered: 16522,
-      weightedWager: 16522
+      wagered: 26522,
+      weightedWager: 26522
     });
 
     // ✅ Add fixed ShinRain
     entries.push({
       username: maskUsername("ShinRain"),
-      wagered: 18317,
-      weightedWager: 18317
+      wagered: 38317,
+      weightedWager: 38317
     });
 
     const top = entries
